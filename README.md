@@ -1,50 +1,65 @@
-# Autonomous Agents Assignment Proposal  
+# Autonomous Lifeform
 
-## Buster & Cleo – Autonomous Digital Dogs
+## Buster & Cleo
 
-### Project Overview
-This project will create two autonomous artificial lifeforms: **Buster** and **Cleo**, inspired by my real-life dogs. The goal is to simulate believable digital creatures that behave independently and interact with the player and their environment. Each dog will have its own behaviours and internal needs, creating the illusion that they are living beings with personalities and emotions.
+This repository is now set up as a **Godot 4 starter project** for your autonomous agents idea. It includes a small 2D prototype with two digital dogs, **Buster** and **Cleo**, who make state-based decisions from their internal needs and the world around them.
 
-The lifeforms will exist in a small virtual environment where they can wander, react to the player, and interact with objects such as food or toys. The player will not directly control the dogs; instead, the creatures will act autonomously based on their internal states and environmental stimuli.
+## What Is Included
 
-### Behaviour System
-The dogs will use a **Finite State Machine (FSM)** architecture to manage behaviour. Each dog will switch between behavioural states depending on its needs and what is happening in the environment.
+- A runnable Godot project in [project.godot](/Users/tomasmacsweeney/Documents/TU/autonomous-lifeform/project.godot)
+- A main scene in [scenes/main.tscn](/Users/tomasmacsweeney/Documents/TU/autonomous-lifeform/scenes/main.tscn)
+- Reusable dog logic in [scripts/dog.gd](/Users/tomasmacsweeney/Documents/TU/autonomous-lifeform/scripts/dog.gd)
+- Simple food and toy world items in [scripts/world_item.gd](/Users/tomasmacsweeney/Documents/TU/autonomous-lifeform/scripts/world_item.gd)
+- A clearer play space with beds, activity zones, and live dog status cards
 
-Possible states include:
+## Prototype Behaviour
 
-- **Idle** – the dog rests or observes the environment  
-- **Wander** – the dog explores the space using steering behaviours  
-- **Follow Player** – the dog approaches the player when nearby  
-- **Seek Food** – the dog searches for food objects when hungry  
-- **Play** – the dog chases a toy or interacts with the other dog  
-- **Sleep** – the dog rests when energy is low  
+Each dog uses a lightweight FSM-style decision loop with these behaviours:
 
-These states will transition dynamically depending on internal variables such as **hunger, energy, and happiness**.
+- `Idle`
+- `Wander`
+- `Follow Player`
+- `Seek Food`
+- `Play`
+- `Sleep`
 
-### Movement and Animation
-Movement will be implemented using **steering behaviours** such as wander, seek, and arrive. These behaviours will allow the dogs to move in a natural and believable way rather than using rigid scripted movement.
+The state selection is influenced by:
 
-Procedural animation techniques will be used to simulate behaviours such as **tail wagging**, **looking at the player**, or subtle idle movements. This will help convey emotion and personality in the creatures.
+- `hunger`
+- `energy`
+- `happiness`
+- individual personality tuning
 
-### Interaction
-The player will be able to influence the dogs through simple interactions such as:
+The two dogs are intentionally different:
 
-- Moving near the dogs  
-- Dropping food objects  
-- Interacting with toys  
+- `Buster` is more social, faster, and much more playful
+- `Cleo` is more curious, calmer, and more independent
 
-The dogs will react to these interactions autonomously. For example, a hungry dog may move toward food, while a curious dog may approach the player. The dogs may also interact with each other, reinforcing the impression that they are independent lifeforms.
+The improved prototype now also includes:
 
-### Personality and Identity
-Each dog will have a slightly different personality to reinforce the illusion of life:
+- dedicated bed positions for sleeping
+- favourite roam spots for each dog
+- live thought text over each dog
+- a pack-status HUD on the right
+- item lifetime so food and toys clear out naturally
 
-- **Buster** – energetic and playful, often following the player and chasing toys  
-- **Cleo** – calm and independent, spending more time wandering and exploring  
+## Controls
 
-These differences will be implemented by adjusting behaviour priorities and internal variables, creating the impression that each creature has its own character and preferences.
+- `WASD` or arrow keys move the player marker
+- Left click drops food
+- Right click drops a toy
+- Food disappears after a while, and toys slowly expire too
 
-### Technology
-The project will be developed using **Godot Engine** and **GDScript**. It will incorporate code and systems from the provided repositories that include steering behaviours and procedural animation systems. These tools will be used to implement the autonomous movement and behavioural systems for the lifeforms.
+## How To Open It
 
-### Expected Outcome
-The final result will be a small interactive simulation featuring two autonomous digital dogs that demonstrate believable artificial life behaviour. Through autonomous movement, reactions to the player, and emotional responses such as excitement or tiredness, the project will aim to convince the user that the creatures possess a mind and personality of their own.
+1. Open Godot.
+2. Import the folder: `/Users/tomasmacsweeney/Documents/TU/autonomous-lifeform`
+3. Open the project and run the main scene.
+
+## Suggested Next Steps
+
+- Replace the procedural dog drawings with dog sprites or skeletal animation
+- Move from the simple FSM into a more modular state machine folder structure
+- Add object sensing with `Area2D`
+- Add barking, sound effects, and better interaction feedback
+- Expand from the current 2D prototype into the style required for your assignment
