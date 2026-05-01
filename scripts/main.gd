@@ -28,11 +28,13 @@ const ENRICHMENT_SPOTS := {
 @onready var dogs_container: Node2D = $Dogs
 @onready var food_items: Node2D = $FoodItems
 @onready var toy_items: Node2D = $ToyItems
+@onready var camera: Camera2D = $Camera2D
 @onready var hud_label: Label = $Hud/Instructions
 @onready var dog_status_label: Label = $Hud/DogStatus
 @onready var hint_label: Label = $Hud/HintLabel
 
 var day_time := 0.0
+var camera_shake := 0.0
 
 
 func _ready() -> void:
@@ -44,6 +46,7 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	day_time += delta
+	_update_camera(delta)
 	_update_player(delta)
 	_refresh_hud()
 	queue_redraw()
@@ -81,6 +84,7 @@ func _draw() -> void:
 	_draw_zone(Vector2(130.0, 618.0), Vector2(170.0, 58.0), Color("d96c5f"), "Food")
 	_draw_zone(Vector2(980.0, 618.0), Vector2(170.0, 58.0), Color("5aa6d6"), "Toy Box")
 	_draw_player()
+	_draw_hud_backplates()
 
 
 func get_player_position() -> Vector2:
@@ -193,6 +197,7 @@ func _spawn_item(container: Node2D, item_type: String, drop_position: Vector2) -
 	var item = ITEM_SCENE.instantiate()
 	item.configure(item_type, drop_position)
 	container.add_child(item)
+	_bump_camera(2.5)
 
 
 func _update_player(delta: float) -> void:
@@ -263,12 +268,32 @@ func _pet_nearest_dog() -> void:
 	var dog := _get_nearest_dog()
 	if dog != null and dog.has_method("react_to_pet"):
 		dog.react_to_pet()
+		_bump_camera(3.5)
 
 
 func _whistle_pack() -> void:
 	for child in dogs_container.get_children():
 		if child.has_method("hear_whistle"):
 			child.hear_whistle(player.position)
+	_bump_camera(4.5)
+
+
+func _update_camera(delta: float) -> void:
+	camera_shake = move_toward(camera_shake, 0.0, delta * 18.0)
+	if camera_shake > 0.05:
+		camera.offset = Vector2(randf_range(-camera_shake, camera_shake), randf_range(-camera_shake, camera_shake))
+	else:
+		camera.offset = Vector2.ZERO
+
+
+func _bump_camera(amount: float) -> void:
+	camera_shake = minf(camera_shake + amount, 10.0)
+
+
+func _draw_hud_backplates() -> void:
+	draw_rect(Rect2(Vector2(16.0, 12.0), Vector2(628.0, 112.0)), Color(1, 1, 1, 0.32), true)
+	draw_rect(Rect2(Vector2(926.0, 12.0), Vector2(336.0, 190.0)), Color(1, 1, 1, 0.28), true)
+	draw_rect(Rect2(Vector2(18.0, 660.0), Vector2(700.0, 52.0)), Color(1, 1, 1, 0.28), true)
 
 
 func _draw_player() -> void:
