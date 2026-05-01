@@ -32,6 +32,8 @@ const ENRICHMENT_SPOTS := {
 @onready var dog_status_label: Label = $Hud/DogStatus
 @onready var hint_label: Label = $Hud/HintLabel
 
+var day_time := 0.0
+
 
 func _ready() -> void:
 	add_to_group("world")
@@ -41,6 +43,7 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
+	day_time += delta
 	_update_player(delta)
 	_refresh_hud()
 	queue_redraw()
@@ -61,12 +64,18 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _draw() -> void:
+	var warmth := 0.5 + sin(day_time * 0.16) * 0.5
+	var sky_color := Color("dce7f7").lerp(Color("f4dfbb"), warmth * 0.22)
+	var grass_color := Color("cadfad").lerp(Color("b9d28d"), warmth * 0.18)
 	draw_rect(Rect2(Vector2.ZERO, WORLD_SIZE), Color("e7efe9"), true)
-	draw_rect(Rect2(Vector2.ZERO, Vector2(WORLD_SIZE.x, 140.0)), Color("dce7f7"), true)
+	draw_rect(Rect2(Vector2.ZERO, Vector2(WORLD_SIZE.x, 140.0)), sky_color, true)
 	draw_circle(Vector2(1120.0, 84.0), 42.0, Color("f8d77a"))
-	draw_rect(PLAY_AREA, Color("cadfad"), true)
+	_draw_clouds()
+	draw_rect(PLAY_AREA, grass_color, true)
+	_draw_grass_texture()
 	draw_rect(PLAY_AREA.grow(16.0), Color("7f9264"), false, 7.0)
 	_draw_fence()
+	_draw_enrichment_spots()
 	_draw_bed("Buster", BED_POSITIONS["Buster"], Color("c98c57"), Color("f1d3ae"))
 	_draw_bed("Cleo", BED_POSITIONS["Cleo"], Color("8e715a"), Color("dcc0a1"))
 	_draw_zone(Vector2(130.0, 618.0), Vector2(170.0, 58.0), Color("d96c5f"), "Food")
@@ -284,6 +293,32 @@ func _draw_fence() -> void:
 		draw_line(Vector2(1232.0, y), Vector2(1232.0, y + 22.0), post_color, 4.0, true)
 	draw_line(Vector2(48.0, 108.0), Vector2(1232.0, 108.0), post_color, 4.0, true)
 	draw_line(Vector2(48.0, 662.0), Vector2(1232.0, 662.0), post_color, 4.0, true)
+
+
+func _draw_clouds() -> void:
+	for i in range(4):
+		var x := fmod(day_time * (8.0 + i * 2.0) + i * 330.0, WORLD_SIZE.x + 160.0) - 80.0
+		var y := 42.0 + i % 2 * 32.0
+		var cloud_color := Color(1, 1, 1, 0.62)
+		draw_circle(Vector2(x, y), 22.0, cloud_color)
+		draw_circle(Vector2(x + 24.0, y - 6.0), 28.0, cloud_color)
+		draw_circle(Vector2(x + 54.0, y), 20.0, cloud_color)
+
+
+func _draw_grass_texture() -> void:
+	var blade_color := Color("8eaa68")
+	for x in range(76, 1210, 44):
+		var offset := int(sin(float(x) * 0.07) * 14.0)
+		for y in range(140 + abs(offset), 626, 86):
+			draw_line(Vector2(x, y), Vector2(x + 5.0, y - 13.0), blade_color, 2.0, true)
+			draw_line(Vector2(x + 8.0, y), Vector2(x + 2.0, y - 11.0), blade_color.darkened(0.08), 2.0, true)
+
+
+func _draw_enrichment_spots() -> void:
+	for dog_name in ENRICHMENT_SPOTS:
+		for spot in ENRICHMENT_SPOTS[dog_name]:
+			draw_circle(spot, 18.0, Color(1.0, 1.0, 1.0, 0.10))
+			draw_arc(spot, 24.0, 0.0, TAU, 24, Color("ffffff", 0.26), 2.0)
 
 
 func _draw_bed(dog_name: String, position: Vector2, base_color: Color, pillow_color: Color) -> void:
