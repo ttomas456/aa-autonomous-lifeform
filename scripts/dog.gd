@@ -53,6 +53,7 @@ var bed_position := Vector2.ZERO
 var favorite_spots: Array = []
 var thought := "Settling in"
 var wander_bias := 0.65
+var emotion_motes: Array[Dictionary] = []
 
 
 func configure(profile: Dictionary) -> void:
@@ -85,6 +86,7 @@ func _physics_process(delta: float) -> void:
 
 	_update_needs(delta)
 	memory.tick(delta)
+	_update_emotion_motes(delta)
 	decision_timer -= delta
 
 	if _needs_urgent_transition() or decision_timer <= 0.0:
@@ -130,6 +132,7 @@ func _draw() -> void:
 		draw_circle(Vector2(26.0, -26.0), 4.0, Color("f6d365"))
 	if memory.excitement > 20.0:
 		draw_arc(Vector2.ZERO, 30.0, -0.8, 0.8, 12, accent_color.lightened(0.35), 3.0)
+	_draw_emotion_motes()
 
 
 func _update_needs(delta: float) -> void:
@@ -203,6 +206,7 @@ func _get_desired_velocity() -> Vector2:
 				world.consume_item(target_item)
 				target_item = null
 				needs.eat()
+				_emit_emotion_motes(Color("f6d77b"), 6, "crumb")
 				choose_state(true)
 				return Vector2.ZERO
 			return _arrive(target_item.global_position, 22.0, 1.0)
@@ -211,6 +215,7 @@ func _get_desired_velocity() -> Vector2:
 				if global_position.distance_to(target_item.global_position) < 26.0:
 					world.register_play(target_item)
 					needs.play()
+					_emit_emotion_motes(Color("f6d365"), 8, "spark")
 					_pick_new_wander_target()
 					decision_timer = 0.2
 					return _seek(wander_target, 0.6)
@@ -300,6 +305,7 @@ func _update_thought() -> void:
 			thought = "Ready to play"
 		DogState.SLEEP:
 			thought = "Heading for a nap"
+			_emit_emotion_motes(Color("8795c9"), 3, "sleep")
 
 
 func get_snapshot() -> Dictionary:
@@ -318,6 +324,7 @@ func get_snapshot() -> Dictionary:
 func react_to_pet() -> void:
 	needs.comfort(14.0 + sociability * 8.0)
 	memory.remember("Petted by player", 8.0 + sociability * 6.0, 55.0)
+	_emit_emotion_motes(Color("de6b6b"), 9, "heart")
 	state = DogState.FOLLOW_PLAYER
 	thought = "That felt kind"
 	decision_timer = 1.2
@@ -326,6 +333,50 @@ func react_to_pet() -> void:
 func hear_whistle(source_position: Vector2) -> void:
 	wander_target = source_position
 	memory.remember("Heard whistle", 2.0, 35.0)
+	_emit_emotion_motes(Color("e8f4ff"), 4, "ping")
 	state = DogState.FOLLOW_PLAYER
 	thought = "Coming!"
 	decision_timer = 1.4
+
+
+func _emit_emotion_motes(color: Color, count: int, mote_type: String) -> void:
+	for i in range(count):
+		emotion_motes.append({
+			"position": Vector2(randf_range(-18.0, 18.0), randf_range(-38.0, -14.0)),
+			"velocity": Vector2(randf_range(-16.0, 16.0), randf_range(-34.0, -18.0)),
+			"life": randf_range(0.65, 1.1),
+			"max_life": 1.1,
+			"color": color,
+			"type": mote_type,
+			"size": randf_range(3.0, 6.0)
+		})
+
+
+func _update_emotion_motes(delta: float) -> void:
+	for i in range(emotion_motes.size() - 1, -1, -1):
+		emotion_motes[i]["life"] -= delta
+		emotion_motes[i]["position"] += emotion_motes[i]["velocity"] * delta
+		emotion_motes[i]["velocity"] *= 0.985
+		if emotion_motes[i]["life"] <= 0.0:
+			emotion_motes.remove_at(i)
+
+
+func _draw_emotion_motes() -> void:
+	for mote in emotion_motes:
+		var alpha: float = clampf(mote["life"] / mote["max_life"], 0.0, 1.0)
+		var color: Color = mote["color"] * Color(1.0, 1.0, 1.0, alpha)
+		var position: Vector2 = mote["position"]
+		var size: float = mote["size"]
+		match mote["type"]:
+			"heart":
+				draw_circle(position + Vector2(-size * 0.35, 0.0), size * 0.45, color)
+				draw_circle(position + Vector2(size * 0.35, 0.0), size * 0.45, color)
+				draw_colored_polygon(PackedVector2Array([
+					position + Vector2(-size * 0.85, size * 0.15),
+					position + Vector2(size * 0.85, size * 0.15),
+					position + Vector2(0.0, size * 1.05)
+				]), color)
+			"sleep":
+				draw_string(ThemeDB.fallback_font, position, "z", HORIZONTAL_ALIGNMENT_LEFT, -1, 18, color)
+			_:
+				draw_circle(position, size, color)
