@@ -3,6 +3,7 @@ class_name DogAgent
 
 const DogNeedsScript := preload("res://scripts/dog_needs.gd")
 const DogMemoryScript := preload("res://scripts/dog_memory.gd")
+const ProceduralSoundScript := preload("res://scripts/procedural_sound.gd")
 
 enum DogState {
 	IDLE,
@@ -54,6 +55,7 @@ var favorite_spots: Array = []
 var thought := "Settling in"
 var wander_bias := 0.65
 var emotion_motes: Array[Dictionary] = []
+var sound_player: AudioStreamPlayer2D = null
 
 
 func configure(profile: Dictionary) -> void:
@@ -74,6 +76,7 @@ func configure(profile: Dictionary) -> void:
 func _ready() -> void:
 	world = get_tree().get_first_node_in_group("world")
 	name_label.text = dog_name
+	_setup_sound()
 	needs.randomize_start()
 	choose_state(true)
 
@@ -182,6 +185,7 @@ func choose_state(force := false) -> void:
 		if state == DogState.WANDER:
 			_pick_new_wander_target()
 		_update_thought()
+		_play_state_sound()
 
 	decision_timer = randf_range(1.0, 2.6)
 
@@ -207,6 +211,7 @@ func _get_desired_velocity() -> Vector2:
 				target_item = null
 				needs.eat()
 				_emit_emotion_motes(Color("f6d77b"), 6, "crumb")
+				_play_tone(420.0, 0.12, 0.24, 45.0)
 				choose_state(true)
 				return Vector2.ZERO
 			return _arrive(target_item.global_position, 22.0, 1.0)
@@ -216,6 +221,7 @@ func _get_desired_velocity() -> Vector2:
 					world.register_play(target_item)
 					needs.play()
 					_emit_emotion_motes(Color("f6d365"), 8, "spark")
+					_play_tone(720.0, 0.16, 0.22, 90.0)
 					_pick_new_wander_target()
 					decision_timer = 0.2
 					return _seek(wander_target, 0.6)
@@ -325,6 +331,7 @@ func react_to_pet() -> void:
 	needs.comfort(14.0 + sociability * 8.0)
 	memory.remember("Petted by player", 8.0 + sociability * 6.0, 55.0)
 	_emit_emotion_motes(Color("de6b6b"), 9, "heart")
+	_play_tone(640.0 + playfulness * 180.0, 0.18, 0.28, 80.0)
 	state = DogState.FOLLOW_PLAYER
 	thought = "That felt kind"
 	decision_timer = 1.2
@@ -334,6 +341,7 @@ func hear_whistle(source_position: Vector2) -> void:
 	wander_target = source_position
 	memory.remember("Heard whistle", 2.0, 35.0)
 	_emit_emotion_motes(Color("e8f4ff"), 4, "ping")
+	_play_tone(520.0, 0.10, 0.18, 40.0)
 	state = DogState.FOLLOW_PLAYER
 	thought = "Coming!"
 	decision_timer = 1.4
@@ -380,3 +388,30 @@ func _draw_emotion_motes() -> void:
 				draw_string(ThemeDB.fallback_font, position, "z", HORIZONTAL_ALIGNMENT_LEFT, -1, 18, color)
 			_:
 				draw_circle(position, size, color)
+
+
+func _setup_sound() -> void:
+	sound_player = AudioStreamPlayer2D.new()
+	sound_player.name = "Voice"
+	sound_player.max_distance = 520.0
+	sound_player.volume_db = -9.0
+	add_child(sound_player)
+
+
+func _play_tone(frequency: float, duration: float, volume: float, wobble: float) -> void:
+	if sound_player == null:
+		return
+	sound_player.stream = ProceduralSoundScript.make_tone(frequency, duration, volume, wobble)
+	sound_player.play()
+
+
+func _play_state_sound() -> void:
+	match state:
+		DogState.FOLLOW_PLAYER:
+			_play_tone(580.0, 0.09, 0.18, 55.0)
+		DogState.SEEK_FOOD:
+			_play_tone(310.0, 0.11, 0.18, 25.0)
+		DogState.PLAY:
+			_play_tone(760.0, 0.12, 0.20, 100.0)
+		DogState.SLEEP:
+			_play_tone(180.0, 0.22, 0.12, 8.0)
