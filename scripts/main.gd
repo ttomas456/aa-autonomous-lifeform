@@ -53,6 +53,11 @@ func _unhandled_input(event: InputEvent) -> void:
 			_spawn_item(food_items, "food", click_position)
 		elif event.button_index == MOUSE_BUTTON_RIGHT:
 			_spawn_item(toy_items, "toy", click_position)
+	elif event is InputEventKey and event.pressed and not event.echo:
+		if event.keycode == KEY_E:
+			_pet_nearest_dog()
+		elif event.keycode == KEY_Q:
+			_whistle_pack()
 
 
 func _draw() -> void:
@@ -198,7 +203,7 @@ func _update_player(delta: float) -> void:
 
 
 func _refresh_hud() -> void:
-	hud_label.text = "WASD or arrow keys move the player marker.\nLeft click drops food. Right click drops a toy.\nFood: %d/%d  Toys: %d/%d" % [
+	hud_label.text = "WASD or arrow keys move the player marker.\nLeft click drops food. Right click drops a toy. E pets nearby dogs. Q whistles.\nFood: %d/%d  Toys: %d/%d" % [
 		food_items.get_child_count(),
 		FOOD_LIMIT,
 		toy_items.get_child_count(),
@@ -226,7 +231,35 @@ func _build_dog_status_text() -> String:
 				snapshot["energy"],
 				snapshot["happiness"]
 			])
+			lines.append("Trust %.0f | %s" % [
+				snapshot["trust"],
+				snapshot["last_event"]
+			])
 	return "\n".join(lines)
+
+
+func _get_nearest_dog(max_distance := 72.0) -> Node2D:
+	var nearest_dog: Node2D = null
+	var best_distance := max_distance * max_distance
+	for child in dogs_container.get_children():
+		var dog := child as Node2D
+		var distance_to_dog := player.position.distance_squared_to(dog.global_position)
+		if distance_to_dog < best_distance:
+			best_distance = distance_to_dog
+			nearest_dog = dog
+	return nearest_dog
+
+
+func _pet_nearest_dog() -> void:
+	var dog := _get_nearest_dog()
+	if dog != null and dog.has_method("react_to_pet"):
+		dog.react_to_pet()
+
+
+func _whistle_pack() -> void:
+	for child in dogs_container.get_children():
+		if child.has_method("hear_whistle"):
+			child.hear_whistle(player.position)
 
 
 func _draw_player() -> void:

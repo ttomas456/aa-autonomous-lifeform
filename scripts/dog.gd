@@ -2,6 +2,7 @@ extends CharacterBody2D
 class_name DogAgent
 
 const DogNeedsScript := preload("res://scripts/dog_needs.gd")
+const DogMemoryScript := preload("res://scripts/dog_memory.gd")
 
 enum DogState {
 	IDLE,
@@ -40,6 +41,7 @@ const STATE_NAMES := {
 
 var world: Node = null
 var needs := DogNeedsScript.new()
+var memory := DogMemoryScript.new()
 var state := DogState.IDLE
 var decision_timer := 0.0
 var wander_target := Vector2.ZERO
@@ -82,6 +84,7 @@ func _physics_process(delta: float) -> void:
 			return
 
 	_update_needs(delta)
+	memory.tick(delta)
 	decision_timer -= delta
 
 	if _needs_urgent_transition() or decision_timer <= 0.0:
@@ -125,6 +128,8 @@ func _draw() -> void:
 		draw_circle(Vector2(28.0, -28.0), 4.0, Color("de6b6b"))
 	if state == DogState.PLAY:
 		draw_circle(Vector2(26.0, -26.0), 4.0, Color("f6d365"))
+	if memory.excitement > 20.0:
+		draw_arc(Vector2.ZERO, 30.0, -0.8, 0.8, 12, accent_color.lightened(0.35), 3.0)
 
 
 func _update_needs(delta: float) -> void:
@@ -139,6 +144,7 @@ func choose_state(force := false) -> void:
 	var food_target = world.get_nearest_item("food", global_position)
 	var toy_target = world.get_nearest_item("toy", global_position)
 	var player_distance = global_position.distance_to(world.get_player_position())
+	var follow_radius := lerpf(150.0, 250.0, sociability) + memory.social_pull(sociability)
 	var sleep_threshold = needs.sleep_threshold()
 	var mate_distance := INF
 
@@ -155,7 +161,7 @@ func choose_state(force := false) -> void:
 	elif toy_target != null and (playfulness * 100.0) > randf_range(18.0, 100.0):
 		next_state = DogState.PLAY
 		target_item = toy_target
-	elif player_distance <= lerpf(150.0, 250.0, sociability):
+	elif player_distance <= follow_radius:
 		next_state = DogState.FOLLOW_PLAYER
 	elif playfulness > 0.55 and needs.happiness < 64.0:
 		if target_pack_mate != null:
@@ -303,5 +309,23 @@ func get_snapshot() -> Dictionary:
 		"energy": needs.energy,
 		"happiness": needs.happiness,
 		"state": STATE_NAMES[state],
-		"thought": thought
+		"thought": thought,
+		"trust": memory.trust,
+		"last_event": memory.last_event
 	}
+
+
+func react_to_pet() -> void:
+	needs.comfort(14.0 + sociability * 8.0)
+	memory.remember("Petted by player", 8.0 + sociability * 6.0, 55.0)
+	state = DogState.FOLLOW_PLAYER
+	thought = "That felt kind"
+	decision_timer = 1.2
+
+
+func hear_whistle(source_position: Vector2) -> void:
+	wander_target = source_position
+	memory.remember("Heard whistle", 2.0, 35.0)
+	state = DogState.FOLLOW_PLAYER
+	thought = "Coming!"
+	decision_timer = 1.4
