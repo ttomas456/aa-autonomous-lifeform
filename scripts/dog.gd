@@ -1,6 +1,8 @@
 extends CharacterBody2D
 class_name DogAgent
 
+const DogNeedsScript := preload("res://scripts/dog_needs.gd")
+
 enum DogState {
 	IDLE,
 	WANDER,
@@ -37,9 +39,7 @@ const STATE_NAMES := {
 @onready var status_label: Label = $StatusLabel
 
 var world: Node = null
-var hunger := 28.0
-var energy := 88.0
-var happiness := 76.0
+var needs := DogNeedsScript.new()
 var state := DogState.IDLE
 var decision_timer := 0.0
 var wander_target := Vector2.ZERO
@@ -58,8 +58,6 @@ func configure(profile: Dictionary) -> void:
 	coat_color = profile.get("coat_color", coat_color)
 	accent_color = profile.get("accent_color", accent_color)
 	move_speed = profile.get("move_speed", move_speed)
-	hunger_rate = profile.get("hunger_rate", hunger_rate)
-	energy_drain = profile.get("energy_drain", energy_drain)
 	curiosity = profile.get("curiosity", curiosity)
 	sociability = profile.get("sociability", sociability)
 	playfulness = profile.get("playfulness", playfulness)
@@ -67,14 +65,13 @@ func configure(profile: Dictionary) -> void:
 	wander_bias = profile.get("wander_bias", wander_bias)
 	bed_position = profile.get("bed_position", bed_position)
 	favorite_spots = profile.get("favorite_spots", favorite_spots)
+	needs.configure(profile)
 
 
 func _ready() -> void:
 	world = get_tree().get_first_node_in_group("world")
 	name_label.text = dog_name
-	hunger = randf_range(18.0, 36.0)
-	energy = randf_range(68.0, 92.0)
-	happiness = randf_range(58.0, 84.0)
+	needs.randomize_start()
 	choose_state(true)
 
 
@@ -98,14 +95,14 @@ func _physics_process(delta: float) -> void:
 	if velocity.length() > 4.0:
 		facing = velocity.normalized()
 
-	tail_time += delta * (2.0 + playfulness * 1.5 + happiness / 90.0)
+	tail_time += delta * (2.0 + playfulness * 1.5 + needs.happiness / 90.0)
 	_update_labels()
 	queue_redraw()
 
 
 func _draw() -> void:
 	draw_circle(Vector2(0.0, 18.0), 18.0, Color(0, 0, 0, 0.12))
-	var tail_length := 18.0 + happiness * 0.08
+	var tail_length := 18.0 + needs.happiness * 0.08
 	var tail_swing := sin(tail_time * 6.0) * deg_to_rad(16.0 + playfulness * 26.0)
 	var tail_direction := (-facing).rotated(tail_swing)
 	var head_center := facing * 18.0
@@ -131,17 +128,7 @@ func _draw() -> void:
 
 
 func _update_needs(delta: float) -> void:
-	var activity_scale = 1.0 + velocity.length() / max(move_speed, 1.0)
-	hunger = clampf(hunger + hunger_rate * delta, 0.0, 100.0)
-	energy = clampf(energy - energy_drain * delta * activity_scale, 0.0, 100.0)
-	happiness = clampf(happiness - happiness_drift * delta + 0.35 * delta * sociability, 0.0, 100.0)
-
-	if state == DogState.SLEEP:
-		energy = clampf(energy + (18.0 + rest_bias * 8.0) * delta, 0.0, 100.0)
-		happiness = clampf(happiness + 4.0 * delta, 0.0, 100.0)
-	elif state == DogState.PLAY:
-		happiness = clampf(happiness + 6.5 * delta, 0.0, 100.0)
-		energy = clampf(energy - 2.2 * delta, 0.0, 100.0)
+	needs.tick(delta, velocity.length(), move_speed, state == DogState.SLEEP, state == DogState.PLAY)
 
 
 func choose_state(force := false) -> void:
@@ -152,7 +139,7 @@ func choose_state(force := false) -> void:
 	var food_target = world.get_nearest_item("food", global_position)
 	var toy_target = world.get_nearest_item("toy", global_position)
 	var player_distance = global_position.distance_to(world.get_player_position())
-	var sleep_threshold = lerpf(38.0, 54.0, rest_bias)
+	var sleep_threshold = needs.sleep_threshold()
 	var mate_distance := INF
 
 	if target_pack_mate == null:
@@ -160,9 +147,9 @@ func choose_state(force := false) -> void:
 	if target_pack_mate != null:
 		mate_distance = global_position.distance_to(target_pack_mate.global_position)
 
-	if energy <= sleep_threshold:
+	if needs.energy <= sleep_threshold:
 		next_state = DogState.SLEEP
-	elif hunger >= 58.0 and food_target != null:
+	elif needs.hunger >= 58.0 and food_target != null:
 		next_state = DogState.SEEK_FOOD
 		target_item = food_target
 	elif toy_target != null and (playfulness * 100.0) > randf_range(18.0, 100.0):
@@ -170,7 +157,7 @@ func choose_state(force := false) -> void:
 		target_item = toy_target
 	elif player_distance <= lerpf(150.0, 250.0, sociability):
 		next_state = DogState.FOLLOW_PLAYER
-	elif playfulness > 0.55 and happiness < 64.0:
+	elif playfulness > 0.55 and needs.happiness < 64.0:
 		if target_pack_mate != null:
 			next_state = DogState.PLAY
 	elif mate_distance < 120.0 and sociability > 0.45 and randf() < sociability:
@@ -209,8 +196,7 @@ func _get_desired_velocity() -> Vector2:
 			if global_position.distance_to(target_item.global_position) < 22.0:
 				world.consume_item(target_item)
 				target_item = null
-				hunger = clampf(hunger - 46.0, 0.0, 100.0)
-				happiness = clampf(happiness + 10.0, 0.0, 100.0)
+				needs.eat()
 				choose_state(true)
 				return Vector2.ZERO
 			return _arrive(target_item.global_position, 22.0, 1.0)
@@ -218,8 +204,7 @@ func _get_desired_velocity() -> Vector2:
 			if is_instance_valid(target_item):
 				if global_position.distance_to(target_item.global_position) < 26.0:
 					world.register_play(target_item)
-					happiness = clampf(happiness + 14.0, 0.0, 100.0)
-					energy = clampf(energy - 8.0, 0.0, 100.0)
+					needs.play()
 					_pick_new_wander_target()
 					decision_timer = 0.2
 					return _seek(wander_target, 0.6)
@@ -227,7 +212,7 @@ func _get_desired_velocity() -> Vector2:
 
 			if is_instance_valid(target_pack_mate):
 				if global_position.distance_to(target_pack_mate.global_position) < 30.0:
-					happiness = clampf(happiness + 10.0, 0.0, 100.0)
+					needs.play(10.0, 2.0)
 					decision_timer = 0.1
 					return Vector2.ZERO
 				return _arrive(target_pack_mate.global_position, 30.0, 1.0)
@@ -275,11 +260,11 @@ func _arrive(target: Vector2, slow_radius: float, speed_scale: float) -> Vector2
 
 
 func _needs_urgent_transition() -> bool:
-	if state == DogState.SLEEP and energy >= 82.0:
+	if state == DogState.SLEEP and needs.energy >= 82.0:
 		return true
-	if state != DogState.SLEEP and energy <= lerpf(38.0, 54.0, rest_bias):
+	if state != DogState.SLEEP and needs.energy <= needs.sleep_threshold():
 		return true
-	if state != DogState.SEEK_FOOD and hunger >= 72.0 and world.get_nearest_item("food", global_position) != null:
+	if state != DogState.SEEK_FOOD and needs.hunger >= 72.0 and world.get_nearest_item("food", global_position) != null:
 		return true
 	return false
 
@@ -289,9 +274,9 @@ func _update_labels() -> void:
 	thought_label.text = thought
 	status_label.text = "%s | H %.0f E %.0f M %.0f" % [
 		STATE_NAMES[state],
-		hunger,
-		energy,
-		happiness
+		needs.hunger,
+		needs.energy,
+		needs.happiness
 	]
 
 
@@ -314,9 +299,9 @@ func _update_thought() -> void:
 func get_snapshot() -> Dictionary:
 	return {
 		"dog_name": dog_name,
-		"hunger": hunger,
-		"energy": energy,
-		"happiness": happiness,
+		"hunger": needs.hunger,
+		"energy": needs.energy,
+		"happiness": needs.happiness,
 		"state": STATE_NAMES[state],
 		"thought": thought
 	}
