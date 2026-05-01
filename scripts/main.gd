@@ -35,6 +35,7 @@ const ENRICHMENT_SPOTS := {
 
 var day_time := 0.0
 var camera_shake := 0.0
+var debug_gizmos := false
 
 
 func _ready() -> void:
@@ -64,6 +65,8 @@ func _unhandled_input(event: InputEvent) -> void:
 			_pet_nearest_dog()
 		elif event.keycode == KEY_Q:
 			_whistle_pack()
+		elif event.keycode == KEY_G:
+			debug_gizmos = not debug_gizmos
 
 
 func _draw() -> void:
@@ -85,6 +88,8 @@ func _draw() -> void:
 	_draw_zone(Vector2(980.0, 618.0), Vector2(170.0, 58.0), Color("5aa6d6"), "Toy Box")
 	_draw_player()
 	_draw_hud_backplates()
+	if debug_gizmos:
+		_draw_world_gizmos()
 
 
 func get_player_position() -> Vector2:
@@ -217,7 +222,7 @@ func _update_player(delta: float) -> void:
 
 
 func _refresh_hud() -> void:
-	hud_label.text = "WASD or arrow keys move the player marker.\nLeft click drops food. Right click drops a toy. E pets nearby dogs. Q whistles.\nFood: %d/%d  Toys: %d/%d" % [
+	hud_label.text = "WASD/Arrows move. Left click food. Right click toy.\nE pets. Q whistles. G toggles gizmos.\nFood: %d/%d  Toys: %d/%d" % [
 		food_items.get_child_count(),
 		FOOD_LIMIT,
 		toy_items.get_child_count(),
@@ -294,6 +299,13 @@ func _draw_hud_backplates() -> void:
 	draw_rect(Rect2(Vector2(16.0, 12.0), Vector2(628.0, 112.0)), Color(1, 1, 1, 0.32), true)
 	draw_rect(Rect2(Vector2(926.0, 12.0), Vector2(336.0, 190.0)), Color(1, 1, 1, 0.28), true)
 	draw_rect(Rect2(Vector2(18.0, 660.0), Vector2(700.0, 52.0)), Color(1, 1, 1, 0.28), true)
+
+
+func _draw_world_gizmos() -> void:
+	draw_rect(PLAY_AREA, Color("2b7a78", 0.28), false, 2.0)
+	for child in dogs_container.get_children():
+		if child.has_method("draw_debug_gizmo"):
+			child.draw_debug_gizmo()
 
 
 func _draw_player() -> void:

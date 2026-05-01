@@ -347,6 +347,22 @@ func hear_whistle(source_position: Vector2) -> void:
 	decision_timer = 1.4
 
 
+func draw_debug_gizmo() -> void:
+	var target := global_position
+	match state:
+		DogState.WANDER:
+			target = wander_target
+		DogState.FOLLOW_PLAYER:
+			target = world.get_player_position()
+		DogState.SEEK_FOOD, DogState.PLAY:
+			if is_instance_valid(target_item):
+				target = target_item.global_position
+		DogState.SLEEP:
+			target = bed_position
+	world.draw_line(global_position, target, Color("2b7a78", 0.8), 2.0, true)
+	world.draw_circle(target, 8.0, Color("2b7a78", 0.35))
+
+
 func _emit_emotion_motes(color: Color, count: int, mote_type: String) -> void:
 	for i in range(count):
 		emotion_motes.append({
