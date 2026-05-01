@@ -1,0 +1,6 @@
+.godot/
+.import/
+.DS_Store
+export_presets.cfg
+*.import
+*.uid

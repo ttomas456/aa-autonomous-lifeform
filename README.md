@@ -1,50 +1,90 @@
-# Autonomous Agents Assignment Proposal  
+# Buster & Cleo: Autonomous Lifeform
 
-## Buster & Cleo – Autonomous Digital Dogs
+Godot 4.5 project for the Autonomous Agents assignment. The project is a 2D artificial-life garden with two digital dogs, Buster and Cleo, who make autonomous decisions from their needs, personality settings, memories, and the player's actions.
 
-### Project Overview
-This project will create two autonomous artificial lifeforms: **Buster** and **Cleo**, inspired by my real-life dogs. The goal is to simulate believable digital creatures that behave independently and interact with the player and their environment. Each dog will have its own behaviours and internal needs, creating the illusion that they are living beings with personalities and emotions.
+## Concept
 
-The lifeforms will exist in a small virtual environment where they can wander, react to the player, and interact with objects such as food or toys. The player will not directly control the dogs; instead, the creatures will act autonomously based on their internal states and environmental stimuli.
+Buster and Cleo are not directly controlled. They wander, follow the player, seek food, play with toys, nap in their beds, and react to petting and whistles. The goal is to make a small virtual creature system that feels alive through readable needs, procedural animation, sound, emotion particles, and visible decision-making.
 
-### Behaviour System
-The dogs will use a **Finite State Machine (FSM)** architecture to manage behaviour. Each dog will switch between behavioural states depending on its needs and what is happening in the environment.
+## Controls
 
-Possible states include:
+- `WASD` or arrow keys: move the player marker
+- Left click: drop food
+- Right click: drop toy
+- `E`: pet the nearest dog
+- `Q`: whistle both dogs
+- `G`: toggle debug gizmos
 
-- **Idle** – the dog rests or observes the environment  
-- **Wander** – the dog explores the space using steering behaviours  
-- **Follow Player** – the dog approaches the player when nearby  
-- **Seek Food** – the dog searches for food objects when hungry  
-- **Play** – the dog chases a toy or interacts with the other dog  
-- **Sleep** – the dog rests when energy is low  
+## Autonomous Behaviour
 
-These states will transition dynamically depending on internal variables such as **hunger, energy, and happiness**.
+Each dog uses a finite state machine with these states:
 
-### Movement and Animation
-Movement will be implemented using **steering behaviours** such as wander, seek, and arrive. These behaviours will allow the dogs to move in a natural and believable way rather than using rigid scripted movement.
+- `Idle`
+- `Wander`
+- `Follow Player`
+- `Seek Food`
+- `Play`
+- `Sleep`
 
-Procedural animation techniques will be used to simulate behaviours such as **tail wagging**, **looking at the player**, or subtle idle movements. This will help convey emotion and personality in the creatures.
+The state machine is influenced by:
 
-### Interaction
-The player will be able to influence the dogs through simple interactions such as:
+- hunger
+- energy
+- happiness
+- curiosity
+- sociability
+- playfulness
+- rest bias
+- trust and recent memories
 
-- Moving near the dogs  
-- Dropping food objects  
-- Interacting with toys  
+Buster is faster, more social, and more playful. Cleo is calmer, more curious, and more independent.
 
-The dogs will react to these interactions autonomously. For example, a hungry dog may move toward food, while a curious dog may approach the player. The dogs may also interact with each other, reinforcing the impression that they are independent lifeforms.
+## Architecture
 
-### Personality and Identity
-Each dog will have a slightly different personality to reinforce the illusion of life:
+- `scripts/main.gd`: world, player input, spawning, HUD, yard visuals, camera feedback
+- `scripts/dog.gd`: autonomous body, FSM, steering, procedural drawing, reactions
+- `scripts/dog_needs.gd`: hunger, energy, happiness, and need changes over time
+- `scripts/dog_memory.gd`: trust, excitement, and recent player interactions
+- `scripts/world_item.gd`: food and toy behaviours
+- `scripts/procedural_sound.gd`: generated tones for barks, chirps, eating, play, and sleep
 
-- **Buster** – energetic and playful, often following the player and chasing toys  
-- **Cleo** – calm and independent, spending more time wandering and exploring  
+## Polish Features
 
-These differences will be implemented by adjusting behaviour priorities and internal variables, creating the impression that each creature has its own character and preferences.
+- Two agents with distinct personalities
+- Steering-style seek and arrive movement
+- Procedural body, ears, eyes, tail wagging, and state icons
+- Emotion particles for petting, play, eating, whistle, and sleep
+- Procedural sound effects generated in code
+- Animated sky, clouds, grass texture, beds, activity zones, and enrichment spots
+- Player bonding system through petting and trust
+- Debug gizmos showing world bounds and each dog's current target
+- Live HUD showing needs, mood, trust, and recent events
 
-### Technology
-The project will be developed using **Godot Engine** and **GDScript**. It will incorporate code and systems from the provided repositories that include steering behaviours and procedural animation systems. These tools will be used to implement the autonomous movement and behavioural systems for the lifeforms.
+## Running The Project
 
-### Expected Outcome
-The final result will be a small interactive simulation featuring two autonomous digital dogs that demonstrate believable artificial life behaviour. Through autonomous movement, reactions to the player, and emotional responses such as excitement or tiredness, the project will aim to convince the user that the creatures possess a mind and personality of their own.
+1. Open Godot 4.5.
+2. Import this folder as a project.
+3. Run the main scene: `scenes/main.tscn`.
+
+The configured main scene is already set in `project.godot`.
+
+## Build And Demo Checklist
+
+- Export a desktop build before recording.
+- Record the video from the build, not from inside the editor.
+- Show autonomous wandering for at least 15 seconds.
+- Drop food near a hungry dog.
+- Drop a toy and show Buster playing.
+- Pet a dog with `E`.
+- Whistle both dogs with `Q`.
+- Toggle gizmos with `G` and briefly explain the FSM/needs system.
+
+## Sources
+
+All current visuals and sounds are procedural and generated in Godot/GDScript. No third-party art or audio assets are required for the current version.
+
+## Reflection
+
+The most important learning in this prototype was connecting simple independent systems into a more believable creature: needs create pressure, the FSM chooses a behaviour, steering makes the body move, memory changes future social behaviour, and particles/sounds communicate emotion back to the player.
+
+If continuing the project, the next best upgrades would be skeletal dog sprites, richer animations, saveable memories, obstacle sensing with `Area2D`, and a short exported gameplay trailer.
