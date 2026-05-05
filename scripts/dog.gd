@@ -56,6 +56,7 @@ var thought := "Settling in"
 var wander_bias := 0.65
 var emotion_motes: Array[Dictionary] = []
 var sound_player: AudioStreamPlayer2D = null
+var voice_pitch := 1.0
 
 
 func configure(profile: Dictionary) -> void:
@@ -70,6 +71,7 @@ func configure(profile: Dictionary) -> void:
 	wander_bias = profile.get("wander_bias", wander_bias)
 	bed_position = profile.get("bed_position", bed_position)
 	favorite_spots = profile.get("favorite_spots", favorite_spots)
+	voice_pitch = profile.get("voice_pitch", voice_pitch)
 	needs.configure(profile)
 
 
@@ -211,7 +213,7 @@ func _get_desired_velocity() -> Vector2:
 				target_item = null
 				needs.eat()
 				_emit_emotion_motes(Color("f6d77b"), 6, "crumb")
-				_play_tone(420.0, 0.12, 0.24, 45.0)
+				_play_sound(ProceduralSoundScript.make_chew())
 				choose_state(true)
 				return Vector2.ZERO
 			return _arrive(target_item.global_position, 22.0, 1.0)
@@ -221,7 +223,7 @@ func _get_desired_velocity() -> Vector2:
 					world.register_play(target_item)
 					needs.play()
 					_emit_emotion_motes(Color("f6d365"), 8, "spark")
-					_play_tone(720.0, 0.16, 0.22, 90.0)
+					_play_sound(ProceduralSoundScript.make_toy_squeak())
 					_pick_new_wander_target()
 					decision_timer = 0.2
 					return _seek(wander_target, 0.6)
@@ -331,7 +333,7 @@ func react_to_pet() -> void:
 	needs.comfort(14.0 + sociability * 8.0)
 	memory.remember("Petted by player", 8.0 + sociability * 6.0, 55.0)
 	_emit_emotion_motes(Color("de6b6b"), 9, "heart")
-	_play_tone(640.0 + playfulness * 180.0, 0.18, 0.28, 80.0)
+	_play_sound(ProceduralSoundScript.make_happy_yip(voice_pitch))
 	state = DogState.FOLLOW_PLAYER
 	thought = "That felt kind"
 	decision_timer = 1.2
@@ -341,7 +343,7 @@ func hear_whistle(source_position: Vector2) -> void:
 	wander_target = source_position
 	memory.remember("Heard whistle", 2.0, 35.0)
 	_emit_emotion_motes(Color("e8f4ff"), 4, "ping")
-	_play_tone(520.0, 0.10, 0.18, 40.0)
+	_play_sound(ProceduralSoundScript.make_bark(voice_pitch))
 	state = DogState.FOLLOW_PLAYER
 	thought = "Coming!"
 	decision_timer = 1.4
@@ -415,19 +417,24 @@ func _setup_sound() -> void:
 
 
 func _play_tone(frequency: float, duration: float, volume: float, wobble: float) -> void:
+	_play_sound(ProceduralSoundScript.make_tone(frequency, duration, volume, wobble))
+
+
+func _play_sound(stream: AudioStreamWAV) -> void:
 	if sound_player == null:
 		return
-	sound_player.stream = ProceduralSoundScript.make_tone(frequency, duration, volume, wobble)
+	sound_player.stream = stream
 	sound_player.play()
 
 
 func _play_state_sound() -> void:
 	match state:
 		DogState.FOLLOW_PLAYER:
-			_play_tone(580.0, 0.09, 0.18, 55.0)
+			if memory.excitement > 25.0 or randf() < sociability:
+				_play_sound(ProceduralSoundScript.make_bark(voice_pitch))
 		DogState.SEEK_FOOD:
-			_play_tone(310.0, 0.11, 0.18, 25.0)
+			_play_sound(ProceduralSoundScript.make_whine(voice_pitch))
 		DogState.PLAY:
-			_play_tone(760.0, 0.12, 0.20, 100.0)
+			_play_sound(ProceduralSoundScript.make_happy_yip(voice_pitch))
 		DogState.SLEEP:
-			_play_tone(180.0, 0.22, 0.12, 8.0)
+			_play_sound(ProceduralSoundScript.make_snore())

@@ -12,7 +12,7 @@ Buster and Cleo are not directly controlled. They wander, follow the player, see
 - Left click: drop food
 - Right click: drop toy
 - `E`: pet the nearest dog
-- `Q`: whistle both dogs
+- `Q`: whistle both dogs with an audible player whistle
 - `G`: toggle debug gizmos
 
 ## Autonomous Behaviour
@@ -54,7 +54,7 @@ Buster is faster, more social, and more playful. Cleo is calmer, more curious, a
 - Steering-style seek and arrive movement
 - Procedural body, ears, eyes, tail wagging, and state icons
 - Emotion particles for petting, play, eating, whistle, and sleep
-- Procedural sound effects generated in code
+- Procedural sound effects generated in code, including barking, happy yips, whining, chewing, toy squeaks, snoring, clicks, and player whistle calls
 - Animated sky, clouds, grass texture, beds, activity zones, and enrichment spots
 - Player bonding system through petting and trust
 - Debug gizmos showing world bounds and each dog's current target
