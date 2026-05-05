@@ -79,6 +79,19 @@ The configured main scene is already set in `project.godot`.
 - Whistle both dogs with `Q`.
 - Toggle gizmos with `G` and briefly explain the FSM/needs system.
 
+## Supporting Docs
+
+- [Demo script](docs/demo_script.md)
+- [Marking map](docs/marking_map.md)
+- [Solo scope note](docs/solo_scope.md)
+- [Testing checklist](docs/testing_checklist.md)
+- [Audio design](docs/audio_design.md)
+- [Build notes](docs/build_notes.md)
+- [Controls quick reference](docs/controls_quick_reference.md)
+- [Architecture notes](docs/architecture_notes.md)
+- [Reflection notes](docs/reflection_notes.md)
+- [Final submission checklist](docs/final_submission_checklist.md)
+
 ## Sources
 
 All current visuals and sounds are procedural and generated in Godot/GDScript. No third-party art or audio assets are required for the current version.
