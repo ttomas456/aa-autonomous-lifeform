@@ -2,6 +2,9 @@
 
 Godot 4.5 project for the Autonomous Agents assignment. The project is a 2D artificial-life garden with two digital dogs, Buster and Cleo, who make autonomous decisions from their needs, personality settings, memories, and the player's actions.
 
+Youtube video link:
+https://www.youtube.com/watch?v=Sst1CLaJOIQ
+
 ## Concept
 
 Buster and Cleo are not directly controlled. They wander, follow the player, seek food, play with toys, nap in their beds, and react to petting and whistles. The goal is to make a small virtual creature system that feels alive through readable needs, procedural animation, sound, emotion particles, and visible decision-making.
