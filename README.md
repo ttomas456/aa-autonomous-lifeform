@@ -12,7 +12,7 @@ Buster and Cleo are not directly controlled. They wander, follow the player, see
 - Left click: drop food
 - Right click: drop toy
 - `E`: pet the nearest dog
-- `Q`: whistle both dogs
+- `Q`: whistle both dogs with an audible player whistle
 - `G`: toggle debug gizmos
 
 ## Autonomous Behaviour
@@ -54,7 +54,7 @@ Buster is faster, more social, and more playful. Cleo is calmer, more curious, a
 - Steering-style seek and arrive movement
 - Procedural body, ears, eyes, tail wagging, and state icons
 - Emotion particles for petting, play, eating, whistle, and sleep
-- Procedural sound effects generated in code
+- Quieter procedural audio mix with distinct barking, happy yips, whining, chewing, toy squeaks, snoring, clicks, player whistle calls, and a gentle looping background track
 - Animated sky, clouds, grass texture, beds, activity zones, and enrichment spots
 - Player bonding system through petting and trust
 - Debug gizmos showing world bounds and each dog's current target
@@ -78,6 +78,19 @@ The configured main scene is already set in `project.godot`.
 - Pet a dog with `E`.
 - Whistle both dogs with `Q`.
 - Toggle gizmos with `G` and briefly explain the FSM/needs system.
+
+## Supporting Docs
+
+- [Demo script](docs/demo_script.md)
+- [Marking map](docs/marking_map.md)
+- [Solo scope note](docs/solo_scope.md)
+- [Testing checklist](docs/testing_checklist.md)
+- [Audio design](docs/audio_design.md)
+- [Build notes](docs/build_notes.md)
+- [Controls quick reference](docs/controls_quick_reference.md)
+- [Architecture notes](docs/architecture_notes.md)
+- [Reflection notes](docs/reflection_notes.md)
+- [Final submission checklist](docs/final_submission_checklist.md)
 
 ## Sources
 

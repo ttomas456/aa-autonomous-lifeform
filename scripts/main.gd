@@ -1,5 +1,6 @@
 extends Node2D
 
+const ProceduralSoundScript := preload("res://scripts/procedural_sound.gd")
 const DOG_SCENE := preload("res://scenes/dog.tscn")
 const ITEM_SCENE := preload("res://scenes/world_item.tscn")
 const WORLD_SIZE := Vector2(1280.0, 720.0)
@@ -36,11 +37,15 @@ const ENRICHMENT_SPOTS := {
 var day_time := 0.0
 var camera_shake := 0.0
 var debug_gizmos := false
+var world_sound_player: AudioStreamPlayer = null
+var music_player: AudioStreamPlayer = null
 
 
 func _ready() -> void:
 	add_to_group("world")
 	randomize()
+	_setup_world_sound()
+	_setup_background_music()
 	_spawn_dogs()
 	_refresh_hud()
 
@@ -167,6 +172,7 @@ func _spawn_dogs() -> void:
 			"wander_bias": 0.52,
 			"hunger_rate": 2.2,
 			"energy_drain": 1.95,
+			"voice_pitch": 1.12,
 			"spawn_position": Vector2(420.0, 360.0)
 		},
 		{
@@ -181,6 +187,7 @@ func _spawn_dogs() -> void:
 			"wander_bias": 0.86,
 			"hunger_rate": 1.95,
 			"energy_drain": 1.55,
+			"voice_pitch": 0.88,
 			"spawn_position": Vector2(820.0, 410.0)
 		}
 	]
@@ -202,6 +209,7 @@ func _spawn_item(container: Node2D, item_type: String, drop_position: Vector2) -
 	var item = ITEM_SCENE.instantiate()
 	item.configure(item_type, drop_position)
 	container.add_child(item)
+	_play_world_sound(ProceduralSoundScript.make_click())
 	_bump_camera(2.5)
 
 
@@ -277,10 +285,34 @@ func _pet_nearest_dog() -> void:
 
 
 func _whistle_pack() -> void:
+	_play_world_sound(ProceduralSoundScript.make_whistle())
 	for child in dogs_container.get_children():
 		if child.has_method("hear_whistle"):
 			child.hear_whistle(player.position)
 	_bump_camera(4.5)
+
+
+func _setup_world_sound() -> void:
+	world_sound_player = AudioStreamPlayer.new()
+	world_sound_player.name = "WorldSound"
+	world_sound_player.volume_db = -16.0
+	add_child(world_sound_player)
+
+
+func _play_world_sound(stream: AudioStreamWAV) -> void:
+	if world_sound_player == null:
+		return
+	world_sound_player.stream = stream
+	world_sound_player.play()
+
+
+func _setup_background_music() -> void:
+	music_player = AudioStreamPlayer.new()
+	music_player.name = "BackgroundMusic"
+	music_player.volume_db = -28.0
+	music_player.stream = ProceduralSoundScript.make_background_loop()
+	add_child(music_player)
+	music_player.play()
 
 
 func _update_camera(delta: float) -> void:
