@@ -54,7 +54,7 @@ Buster is faster, more social, and more playful. Cleo is calmer, more curious, a
 - Steering-style seek and arrive movement
 - Procedural body, ears, eyes, tail wagging, and state icons
 - Emotion particles for petting, play, eating, whistle, and sleep
-- Procedural sound effects generated in code, including barking, happy yips, whining, chewing, toy squeaks, snoring, clicks, and player whistle calls
+- Quieter procedural audio mix with distinct barking, happy yips, whining, chewing, toy squeaks, snoring, clicks, player whistle calls, and a gentle looping background track
 - Animated sky, clouds, grass texture, beds, activity zones, and enrichment spots
 - Player bonding system through petting and trust
 - Debug gizmos showing world bounds and each dog's current target

@@ -57,6 +57,7 @@ var wander_bias := 0.65
 var emotion_motes: Array[Dictionary] = []
 var sound_player: AudioStreamPlayer2D = null
 var voice_pitch := 1.0
+var whistle_response_timer := 0.0
 
 
 func configure(profile: Dictionary) -> void:
@@ -92,6 +93,7 @@ func _physics_process(delta: float) -> void:
 	_update_needs(delta)
 	memory.tick(delta)
 	_update_emotion_motes(delta)
+	_update_whistle_response(delta)
 	decision_timer -= delta
 
 	if _needs_urgent_transition() or decision_timer <= 0.0:
@@ -343,7 +345,7 @@ func hear_whistle(source_position: Vector2) -> void:
 	wander_target = source_position
 	memory.remember("Heard whistle", 2.0, 35.0)
 	_emit_emotion_motes(Color("e8f4ff"), 4, "ping")
-	_play_sound(ProceduralSoundScript.make_bark(voice_pitch))
+	whistle_response_timer = randf_range(0.32, 0.56)
 	state = DogState.FOLLOW_PLAYER
 	thought = "Coming!"
 	decision_timer = 1.4
@@ -412,7 +414,7 @@ func _setup_sound() -> void:
 	sound_player = AudioStreamPlayer2D.new()
 	sound_player.name = "Voice"
 	sound_player.max_distance = 520.0
-	sound_player.volume_db = -9.0
+	sound_player.volume_db = -19.0
 	add_child(sound_player)
 
 
@@ -438,3 +440,11 @@ func _play_state_sound() -> void:
 			_play_sound(ProceduralSoundScript.make_happy_yip(voice_pitch))
 		DogState.SLEEP:
 			_play_sound(ProceduralSoundScript.make_snore())
+
+
+func _update_whistle_response(delta: float) -> void:
+	if whistle_response_timer <= 0.0:
+		return
+	whistle_response_timer -= delta
+	if whistle_response_timer <= 0.0:
+		_play_sound(ProceduralSoundScript.make_bark(voice_pitch))

@@ -38,12 +38,14 @@ var day_time := 0.0
 var camera_shake := 0.0
 var debug_gizmos := false
 var world_sound_player: AudioStreamPlayer = null
+var music_player: AudioStreamPlayer = null
 
 
 func _ready() -> void:
 	add_to_group("world")
 	randomize()
 	_setup_world_sound()
+	_setup_background_music()
 	_spawn_dogs()
 	_refresh_hud()
 
@@ -293,7 +295,7 @@ func _whistle_pack() -> void:
 func _setup_world_sound() -> void:
 	world_sound_player = AudioStreamPlayer.new()
 	world_sound_player.name = "WorldSound"
-	world_sound_player.volume_db = -8.0
+	world_sound_player.volume_db = -16.0
 	add_child(world_sound_player)
 
 
@@ -302,6 +304,15 @@ func _play_world_sound(stream: AudioStreamWAV) -> void:
 		return
 	world_sound_player.stream = stream
 	world_sound_player.play()
+
+
+func _setup_background_music() -> void:
+	music_player = AudioStreamPlayer.new()
+	music_player.name = "BackgroundMusic"
+	music_player.volume_db = -28.0
+	music_player.stream = ProceduralSoundScript.make_background_loop()
+	add_child(music_player)
+	music_player.play()
 
 
 func _update_camera(delta: float) -> void:
